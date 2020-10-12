@@ -13,7 +13,7 @@ uniform vec3 materialColor;             // the material color for our vertex (& 
 // attribute inputs
 layout(location = 0) in vec3 vPos;      // the position of this specific vertex in object space
 // the normal of this specific vertex in object space
-attribute vec3 vNormal;
+in vec3 vNormal;
 // varying outputs
 layout(location = 0) out vec3 color;    // color to apply to this vertex
 

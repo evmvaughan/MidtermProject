@@ -19,6 +19,7 @@
 #include <CSCI441/objects.hpp>          // to render our 3D primitives
 #include <CSCI441/ShaderProgram.hpp>    // a wrapper class for Shader Programs
 
+#include <ctime>
 //*************************************************************************************
 //
 // Global Parameters
@@ -26,11 +27,11 @@
 // global variables to keep track of window width and height.
 // set to initial values for convenience
 const GLint WINDOW_WIDTH = 640, WINDOW_HEIGHT = 480;
-
+int view=0;
 GLboolean leftMouseDown;    	 		// status ff the left mouse button is pressed
 glm::vec2 mousePosition;				// last known X and Y of the mouse
 
-
+int carnumber=4;
 GLboolean keys[256] = {0};              // keep track of our key states
 
 GLfloat propAngle;                      // angle of rotation for our plane propeller
@@ -75,9 +76,11 @@ std::vector<TreeLeavesData> treeLeafLayer3;
 
 // Camera definitions
 
-bool firstPerson = true;
-bool arcBall;
-bool freeCam;
+bool firstPerson = false;
+bool arcBall = false;
+bool freeCam= true;
+
+int charor= 0;
 
 GLdouble cameraTheta, cameraPhi;            // camera DIRECTION in spherical coordinates
 
@@ -100,13 +103,34 @@ enum heros {
 float NotEvanVaughanXLocation = 0;
 float NotEvanVaughanYLocation = 0;
 
+
+float trimanXLocation = 10;
+float trimanYLocation = 10;
+
+float cXLocation = 20;
+float cYLocation = 20;
+
+float lXLocation = 30;
+float lYLocation = 30;
+
+
+
+
+
+
+
+
 int carWidth = 4;
 int carLength = 8;
 
 float carSpeed = 0;
 float carRotation = - float(M_PI/2);
+float triRot= float(M_PI/2);
+float cRot= float(M_PI/2);
+float lRot= float(M_PI/2);
 float rotateWheelSpeed = carSpeed / 2;
 float NotEvanVaughanMotion = 0;
+float trimanMotion = 0;
 
 
 //*************************************************************************************
@@ -135,7 +159,7 @@ void updateCameraDirection() {
     if( camAngles.y <= 0 ) camAngles.y = 0.0f + 0.001f;
     if( camAngles.y >= M_PI ) camAngles.y = M_PI - 0.001f;
 
-    if (arcBall) {
+    if (view%3==1) {
         // convert from spherical to cartesian in our RH coord. sys.
         camDir.x = camAngles.z * sinf(camAngles.x) * sinf(camAngles.y);
         camDir.y = camAngles.z * cosf(camAngles.y);
@@ -143,8 +167,9 @@ void updateCameraDirection() {
 
         // normalize the direction for a free cam
         camDir = glm::normalize(camDir);
-        camDir *= 20;
-    } else if (firstPerson) {
+        printf("%d %d %d\n",camDir.x,camDir.z,camDir.z);
+        camDir *= 10;
+    } else if (view%3==2) {
         // convert from spherical to cartesian in our RH coord. sys.
         camDir.x = camAngles.z * sinf(camAngles.x) * sinf(camAngles.y);
         camDir.y = camAngles.z * -cosf(camAngles.y);
@@ -209,11 +234,21 @@ static void error_callback( int error, const char* description ) {
 static void keyboard_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
 	if( action == GLFW_PRESS ) {
 	    // store that a key had been pressed
+
+
 	    keys[key] = GL_TRUE;
 
 		switch( key ) {
 		    // close our window and quit our program
 			case GLFW_KEY_ESCAPE:
+			    break;
+			case GLFW_KEY_Z:
+                view+=1;
+                break;
+		    case GLFW_KEY_P:
+                charor+=1;
+                break;
+
 			case GLFW_KEY_Q:
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
 				break;
@@ -440,6 +475,177 @@ void drawNotEvanVaughan(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx
     drawWheel(4, modelMtx, viewMtx, projMtx);
 }
 
+
+void drawtribody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(trimanMotion) + 1.0f, -3.5));
+
+    modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    for (int col = 0; col < 4; col++) {
+        for (int row = 0; row < 8; row++) {
+            glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
+            computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+            glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
+            glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+            CSCI441::drawSolidCubeFlat(1);
+        }
+    }
+
+    for (int col = 0; col < 4; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 2.0f, 7.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 4; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(2*col, 3.0f, 6.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 1.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 2; col++) {
+
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(3*col + 1.0f, 2.0f, 0));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(1.0f, 0.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+
+    }
+//
+    for (int row = 0; row < 7; row++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(0, 2.0f, row));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+
+    }
+//
+    for (int row = 0; row < 7; row++) {
+
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(3.0f, 2.0f, row));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+
+    }
+
+}
+
+void drawtriman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(trimanXLocation, 0.0f, trimanYLocation));
+    modelMtx = glm::rotate(modelMtx, triRot, CSCI441::Y_AXIS);
+    drawtribody(modelMtx, viewMtx, projMtx);
+
+}
+
+
+void drawcubebody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(trimanMotion) + 1.0f, -3.5));
+
+    modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
+
+    for (int col = 0; col < 2; col++) {
+        for (int row = 0; row < 8; row++) {
+            glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
+            computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+            glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
+            glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+            CSCI441::drawSolidCubeFlat(1);
+        }
+    }
+
+    for (int col = 0; col < 2; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 2.0f, 7.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 4; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(2*col, 3.0f, 6.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 1.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 2; col++) {
+
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(3*col + 1.0f, 2.0f, 0));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(1.0f, 0.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+
+    }
+}
+
+void drawCman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(cXLocation, 0.0f, cYLocation));
+    modelMtx = glm::rotate(modelMtx, cRot, CSCI441::Y_AXIS);
+    drawcubebody(modelMtx, viewMtx, projMtx);
+
+}
+
+
+void drawlastbody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(trimanMotion) + 1.0f, -3.5));
+
+    modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
+
+
+
+    for (int col = 0; col < 8; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 2.0f, 7.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 4; col++) {
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(2*col, 3.0f, 6.0f));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(0.0f, 1.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+    }
+//
+    for (int col = 0; col < 2; col++) {
+
+        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(3*col + 1.0f, 2.0f, 0));
+        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
+        glm::vec3 bodyColor(1.0f, 0.0f, 0.0f);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+        CSCI441::drawSolidCubeFlat(1);
+
+    }
+}
+
+void drawlman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(lXLocation, 0.0f, lYLocation));
+    modelMtx = glm::rotate(modelMtx, lRot, CSCI441::Y_AXIS);
+    drawlastbody(modelMtx, viewMtx, projMtx);
+
+}
+
+
+
+
 // renderScene() ///////////////////////////////////////////////////////////////
 //
 //  Responsible for drawing all of our objects that make up our world.  Must
@@ -521,6 +727,9 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
     glm::mat4 modelMtx(1.0f);
 
     drawNotEvanVaughan(modelMtx, viewMtx, projMtx);
+    drawtriman(modelMtx, viewMtx, projMtx);
+    drawCman(modelMtx, viewMtx, projMtx);
+    drawlman(modelMtx, viewMtx, projMtx);
 
     // we are going to cheat and use our look at point to place our plane so it is always in view
 //    modelMtx = glm::translate( modelMtx, camPos+camDir );
@@ -546,9 +755,24 @@ void updateScene() {
 
     // turn right
     if( keys[GLFW_KEY_D] ) {
-        if (selectedHero == NotEvanVaughan) {
+
+        if (charor%carnumber==0)   {
             carRotation -= 0.05f;
         }
+
+        if (charor%carnumber==1)   {
+            triRot -= 0.05f;
+        }
+
+        if (charor%carnumber==2)   {
+            cRot -= 0.05f;
+        }
+
+        if (charor%carnumber==3)   {
+            lRot -= 0.05f;
+        }
+
+
         if (firstPerson) {
             camAngles.x  += 0.05f;
             updateCameraDirection();
@@ -556,9 +780,24 @@ void updateScene() {
     }
     // turn left
     if( keys[GLFW_KEY_A] ) {
-        if (selectedHero == NotEvanVaughan)  {
+
+        if (charor%carnumber==0)   {
             carRotation += 0.05f;
         }
+
+        if (charor%carnumber==1)   {
+            triRot += 0.05f;
+        }
+
+        if (charor%carnumber==2)   {
+            cRot += 0.05f;
+        }
+        if (charor%carnumber==3)   {
+            lRot += 0.05f;
+        }
+
+
+
         if (firstPerson) {
             camAngles.x -= 0.05f;
             updateCameraDirection();
@@ -566,7 +805,8 @@ void updateScene() {
     }
     // pitch up
     if( keys[GLFW_KEY_W] ) {
-        if (selectedHero == NotEvanVaughan) {
+
+        if (charor%carnumber==0) {
             rotateWheelSpeed -= 0.5f;
             if (NotEvanVaughanYLocation < 50 || NotEvanVaughanYLocation + cos(carRotation) < 50) {
                 if (NotEvanVaughanYLocation + cos(carRotation) > -50) {
@@ -579,10 +819,79 @@ void updateScene() {
                 }
             }
         }
+
+
+        if (charor%carnumber==1) {
+
+            if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
+                if (trimanYLocation + cos(triRot) < 50) {
+                    trimanYLocation += cos(triRot) * 0.5;
+                }
+
+
+            }
+
+
+            if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
+                printf("goinx");
+                if (trimanXLocation + sin(triRot) < 50) {
+                    trimanXLocation += sin(triRot) * 0.5;
+                }
+            }
+
+
+        }
+
+
+        if (charor%carnumber==2) {
+
+            if (cYLocation > -50 || cYLocation - cos(triRot) > -50) {
+                if (cYLocation + cos(cRot) < 50) {
+                    cYLocation += cos(cRot) * 0.5;
+                }
+
+
+            }
+
+
+            if (cXLocation > -50 || cXLocation - sin(triRot) > -50) {
+                printf("goinx");
+                if (cXLocation + sin(cRot) < 50) {
+                    cXLocation += sin(cRot) * 0.5;
+                }
+            }
+
+
+        }
+
+        if (charor%carnumber==3) {
+
+            if (lYLocation > -50 || lYLocation - cos(lRot) > -50) {
+                if (lYLocation + cos(lRot) < 50) {
+                    lYLocation += cos(lRot) * 0.5;
+                }
+
+
+            }
+
+
+            if (lXLocation > -50 || lXLocation - sin(lRot) > -50) {
+                printf("goinx");
+                if (lXLocation + sin(lRot) < 50) {
+                    lXLocation += sin(lRot) * 0.5;
+                }
+            }
+
+
+        }
+
+        //triRot
+        //trimanXLocation
+        //trimanYLocation
     }
     // pitch down
     if( keys[GLFW_KEY_S] ) {
-        if (selectedHero == NotEvanVaughan) {
+        if (charor%carnumber==0) {
             rotateWheelSpeed += 0.5f;
             if (NotEvanVaughanYLocation > -50 || NotEvanVaughanYLocation - cos(carRotation) > -50) {
                 if (NotEvanVaughanYLocation - cos(carRotation) < 50) {
@@ -595,6 +904,78 @@ void updateScene() {
                 }
             }
         }
+
+        if (charor%carnumber==1) {
+            printf("gow");
+            rotateWheelSpeed += 0.5f;
+            if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
+                printf("goinw");
+                    printf("%d",trimanYLocation);
+                    printf(" ");
+                    trimanYLocation -= cos(triRot)  * 0.5;
+                    printf("%d",trimanYLocation);
+                printf(" ");
+
+            }
+
+
+            if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
+                printf("goinx");
+                if (trimanXLocation - sin(triRot) < 50) {
+                    trimanXLocation -= sin(triRot) * 0.5;
+                }
+            }
+        }
+
+        if (charor%carnumber==2) {
+            printf("gow");
+            rotateWheelSpeed += 0.5f;
+            if (cYLocation > -50 || cYLocation - cos(cRot) > -50) {
+                printf("goinw");
+                printf("%d",trimanYLocation);
+                printf(" ");
+                cYLocation -= cos(cRot)  * 0.5;
+                printf("%d",cYLocation);
+                printf(" ");
+
+            }
+
+
+            if ( cXLocation > -50 || cXLocation - sin(cRot) > -50) {
+                printf("goinx");
+                if ( cXLocation - sin(cRot) < 50) {
+                    cXLocation -= sin(cRot) * 0.5;
+                }
+            }
+        }
+
+        if (charor%carnumber==3) {
+            printf("gow");
+            rotateWheelSpeed += 0.5f;
+            if (lYLocation > -50 || lYLocation - cos(cRot) > -50) {
+                printf("goinw");
+                printf("%d",trimanYLocation);
+                printf(" ");
+                lYLocation -= cos(lRot)  * 0.5;
+                printf("%d",lYLocation);
+                printf(" ");
+
+            }
+
+
+            if ( lXLocation > -50 || lXLocation - sin(lRot) > -50) {
+                printf("goinx");
+                if ( lXLocation - sin(lRot) < 50) {
+                    lXLocation -= sin(lRot) * 0.5;
+                }
+            }
+        }
+
+
+
+
+
+
     }
 
     // Free Camera Movements
@@ -931,15 +1312,61 @@ int main() {
 		// set up our look at matrix to position our camera
 
         glm::mat4 viewMtx = glm::lookAt( camPos, camPos + camDir, glm::vec3(  0,  1,  0 ) );
+        //printf("go");
+        if (view%3==1) {
+            if(charor%carnumber==0) {
+                viewMtx = glm::lookAt((camDir + glm::vec3(NotEvanVaughanXLocation, 0, NotEvanVaughanYLocation)),
+                                      glm::vec3(NotEvanVaughanXLocation, 0, NotEvanVaughanYLocation),
+                                      glm::vec3(0, 1, 0));
+            }
 
-        if (arcBall) {
-            viewMtx = glm::lookAt((camDir + glm::vec3(NotEvanVaughanXLocation, 0, NotEvanVaughanYLocation)),
-                                  glm::vec3(NotEvanVaughanXLocation, 0, NotEvanVaughanYLocation),
-                                  glm::vec3(0, 1, 0));
-        } else if (firstPerson) {
+            if(charor%carnumber==1) {
+                viewMtx = glm::lookAt((camDir + glm::vec3(trimanXLocation, 0, trimanYLocation)),
+                                      glm::vec3(trimanXLocation, 0, trimanYLocation),
+                                      glm::vec3(0, 1, 0));
+            }
+
+            if(charor%carnumber==2) {
+                viewMtx = glm::lookAt((camDir + glm::vec3(cXLocation, 0, cYLocation)),
+                                      glm::vec3(cXLocation, 0, cYLocation),
+                                      glm::vec3(0, 1, 0));
+            }
+
+            if(charor%carnumber==3) {
+                viewMtx = glm::lookAt((camDir + glm::vec3(lXLocation, 0, lYLocation)),
+                                      glm::vec3(lXLocation, 0, lYLocation),
+                                      glm::vec3(0, 1, 0));
+            }
+
+        } else if (view%3==2) {
+            //printf("go\n");
             viewMtx = glm::lookAt(glm::vec3(NotEvanVaughanXLocation, 6, NotEvanVaughanYLocation),
                                   camDir + glm::vec3(NotEvanVaughanXLocation, 6, NotEvanVaughanYLocation),
                                   glm::vec3(0, 1, 0));
+            if(charor%carnumber==1) {
+
+                viewMtx = glm::lookAt(glm::vec3(trimanXLocation, 6, trimanYLocation),
+                                      camDir + glm::vec3(trimanXLocation, 6, trimanYLocation),
+                                      glm::vec3(0, 1, 0));
+
+            }
+
+            if(charor%carnumber==2) {
+
+                viewMtx = glm::lookAt(glm::vec3(cXLocation, 6, cYLocation),
+                                      camDir + glm::vec3(cXLocation, 6, cYLocation),
+                                      glm::vec3(0, 1, 0));
+
+            }
+
+            if(charor%carnumber==3) {
+
+                viewMtx = glm::lookAt(glm::vec3(lXLocation, 6, lYLocation),
+                                      camDir + glm::vec3(lXLocation, 6, lYLocation),
+                                      glm::vec3(0, 1, 0));
+
+            }
+
 		}
 
 		renderScene( viewMtx, projMtx );					// draw everything to the window
