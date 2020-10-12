@@ -34,14 +34,6 @@ glm::vec2 mousePosition;				// last known X and Y of the mouse
 int carnumber=4;
 GLboolean keys[256] = {0};              // keep track of our key states
 
-GLfloat propAngle;                      // angle of rotation for our plane propeller
-
-struct BuildingData {                   // stores the information unique to a single building
-    glm::mat4 modelMatrix;                  // the translation/scale of each building
-    glm::vec3 color;                        // the color of each building
-};
-std::vector<BuildingData> buildings;    // information for all of our buildings
-
 GLuint groundVAO;                       // the VAO descriptor for our ground plane
 
 // Shader Program information
@@ -78,7 +70,7 @@ std::vector<TreeLeavesData> treeLeafLayer3;
 
 bool firstPerson = false;
 bool arcBall = false;
-bool freeCam= true;
+bool freeCam = true;
 
 int charor= 0;
 
@@ -91,15 +83,8 @@ glm::vec2 cameraSpeed;                  // cameraSpeed --> x = forward/backward 
 
 int cameraTypeRotation = 0;
 
-// Hero definitions
 
-enum heros {
-    NotEvanVaughan,
-    TriangleMan
-} selectedHero;
-
-// Not Evan Vaughan
-
+// Hero Definitions
 float NotEvanVaughanXLocation = 0;
 float NotEvanVaughanYLocation = 0;
 
@@ -112,12 +97,6 @@ float cYLocation = 20;
 
 float lXLocation = 30;
 float lYLocation = 30;
-
-
-
-
-
-
 
 
 int carWidth = 4;
@@ -167,7 +146,6 @@ void updateCameraDirection() {
 
         // normalize the direction for a free cam
         camDir = glm::normalize(camDir);
-        printf("%d %d %d\n",camDir.x,camDir.z,camDir.z);
         camDir *= 10;
     } else if (view%3==2) {
         // convert from spherical to cartesian in our RH coord. sys.
@@ -244,6 +222,9 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
 			    break;
 			case GLFW_KEY_Z:
                 view+=1;
+                camAngles.x = -M_PI / 3.0f;
+                camAngles.y = M_PI / 2.8f;
+                updateCameraDirection();
                 break;
 		    case GLFW_KEY_P:
                 charor+=1;
@@ -652,20 +633,20 @@ void drawlman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
 //      use the corresponding Shaders, VAOs, and set uniforms as appropriate.
 //
 ////////////////////////////////////////////////////////////////////////////////
-void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
+void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx ) {
     // use our lighting shader program
     lightingShader->useProgram();
 
     //// BEGIN DRAWING THE GROUND PLANE ////
     // draw the ground plane
-    glm::mat4 groundModelMtx = glm::scale( glm::mat4(1.0f), glm::vec3(55.0f, 1.0f, 55.0f));
+    glm::mat4 groundModelMtx = glm::scale(glm::mat4(1.0f), glm::vec3(55.0f, 1.0f, 55.0f));
     computeAndSendMatrixUniforms(groundModelMtx, viewMtx, projMtx);
 
     glm::vec3 groundColor(0.3f, 0.8f, 0.2f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &groundColor[0]);
 
     glBindVertexArray(groundVAO);
-    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
+    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void *) 0);
     //// END DRAWING THE GROUND PLANE ////
 
     //// BEGIN DRAWING THE BUILDINGS ////
@@ -691,55 +672,17 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
         computeAndSendMatrixUniforms(currentLeafLayer3.modelMatrix, viewMtx, projMtx);
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer3.color[0]);
         CSCI441::drawSolidCube(1.0);
-
-//        CSCI441::SimpleShader3::pushTransformation(currentTrunk.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentTrunk.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer1.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer1.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer2.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer2.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer3.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer3.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
     }
 
+        //// BEGIN DRAWING THE HEROS ////
+        glm::mat4 modelMtx(1.0f);
 
-//    for( const BuildingData& currentBuilding : buildings ) {
-//        computeAndSendMatrixUniforms(currentBuilding.modelMatrix, viewMtx, projMtx);
-//
-//        glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentBuilding.color[0]);
-//
-//        CSCI441::drawSolidCube(1.0);
-//    }
-    //// END DRAWING THE BUILDINGS ////
+        drawNotEvanVaughan(modelMtx, viewMtx, projMtx);
+        drawtriman(modelMtx, viewMtx, projMtx);
+        drawCman(modelMtx, viewMtx, projMtx);
+        drawlman(modelMtx, viewMtx, projMtx);
 
-    //// BEGIN DRAWING THE HERO ////
-    glm::mat4 modelMtx(1.0f);
-
-    drawNotEvanVaughan(modelMtx, viewMtx, projMtx);
-    drawtriman(modelMtx, viewMtx, projMtx);
-    drawCman(modelMtx, viewMtx, projMtx);
-    drawlman(modelMtx, viewMtx, projMtx);
-
-    // we are going to cheat and use our look at point to place our plane so it is always in view
-//    modelMtx = glm::translate( modelMtx, camPos+camDir );
-//    // rotate the plane with our camera theta direction (we need to rotate the opposite direction so we always look at the back)
-//    modelMtx = glm::rotate( modelMtx, -camAngles.x, CSCI441::Y_AXIS );
-//    // rotate the plane with our camera phi direction
-//    modelMtx = glm::rotate( modelMtx,  camAngles.y, CSCI441::X_AXIS );
-    // draw our plane now
-//    drawPlane( modelMtx, viewMtx, projMtx );
-    //// END DRAWING THE PLANE ////
+        //// END DRAWING THE PLANE ////
 }
 
 // updateScene() ////////////////////////////////////////////////////////////////
@@ -773,7 +716,7 @@ void updateScene() {
         }
 
 
-        if (firstPerson) {
+        if (view%3==2) {
             camAngles.x  += 0.05f;
             updateCameraDirection();
         }
@@ -796,9 +739,7 @@ void updateScene() {
             lRot += 0.05f;
         }
 
-
-
-        if (firstPerson) {
+        if (view%3==2) {
             camAngles.x -= 0.05f;
             updateCameraDirection();
         }
@@ -833,10 +774,12 @@ void updateScene() {
 
 
             if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-                printf("goinx");
                 if (trimanXLocation + sin(triRot) < 50) {
                     trimanXLocation += sin(triRot) * 0.5;
                 }
+
+
+
             }
 
 
@@ -855,7 +798,6 @@ void updateScene() {
 
 
             if (cXLocation > -50 || cXLocation - sin(triRot) > -50) {
-                printf("goinx");
                 if (cXLocation + sin(cRot) < 50) {
                     cXLocation += sin(cRot) * 0.5;
                 }
@@ -876,7 +818,6 @@ void updateScene() {
 
 
             if (lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-                printf("goinx");
                 if (lXLocation + sin(lRot) < 50) {
                     lXLocation += sin(lRot) * 0.5;
                 }
@@ -885,11 +826,8 @@ void updateScene() {
 
         }
 
-        //triRot
-        //trimanXLocation
-        //trimanYLocation
+
     }
-    // pitch down
     if( keys[GLFW_KEY_S] ) {
         if (charor%carnumber==0) {
             rotateWheelSpeed += 0.5f;
@@ -906,21 +844,15 @@ void updateScene() {
         }
 
         if (charor%carnumber==1) {
-            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
-                printf("goinw");
-                    printf("%d",trimanYLocation);
-                    printf(" ");
+
                     trimanYLocation -= cos(triRot)  * 0.5;
-                    printf("%d",trimanYLocation);
-                printf(" ");
 
             }
 
 
             if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-                printf("goinx");
                 if (trimanXLocation - sin(triRot) < 50) {
                     trimanXLocation -= sin(triRot) * 0.5;
                 }
@@ -928,21 +860,15 @@ void updateScene() {
         }
 
         if (charor%carnumber==2) {
-            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (cYLocation > -50 || cYLocation - cos(cRot) > -50) {
-                printf("goinw");
-                printf("%d",trimanYLocation);
-                printf(" ");
+
                 cYLocation -= cos(cRot)  * 0.5;
-                printf("%d",cYLocation);
-                printf(" ");
 
             }
 
 
             if ( cXLocation > -50 || cXLocation - sin(cRot) > -50) {
-                printf("goinx");
                 if ( cXLocation - sin(cRot) < 50) {
                     cXLocation -= sin(cRot) * 0.5;
                 }
@@ -950,21 +876,16 @@ void updateScene() {
         }
 
         if (charor%carnumber==3) {
-            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (lYLocation > -50 || lYLocation - cos(cRot) > -50) {
-                printf("goinw");
-                printf("%d",trimanYLocation);
-                printf(" ");
+
                 lYLocation -= cos(lRot)  * 0.5;
-                printf("%d",lYLocation);
-                printf(" ");
+
 
             }
 
 
             if ( lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-                printf("goinx");
                 if ( lXLocation - sin(lRot) < 50) {
                     lXLocation -= sin(lRot) * 0.5;
                 }
@@ -983,17 +904,11 @@ void updateScene() {
     if( keys[GLFW_KEY_SPACE] && freeCam) {
         camPos += camDir * cameraSpeed.x;
 
-        // rotate the propeller to make the plane fly!
-        propAngle += M_PI/16.0f;
-        if( propAngle > 2*M_PI ) propAngle -= 2*M_PI;
     }
     // go backward
     if( keys[GLFW_KEY_X] && freeCam ) {
         camPos -= camDir * cameraSpeed.x;
 
-        // rotate the propeller to make the plane fly!
-        propAngle -= M_PI/16.0f;
-        if( propAngle < 0 ) propAngle += 2*M_PI;
     }
 }
 
@@ -1012,33 +927,6 @@ void generateEnvironmentDL() {
     const GLfloat GRID_SPACING = 1.1f;
     const GLint GRID_START = - GRID_WIDTH/2;
     const GLint GRID_END = GRID_WIDTH/2;
-
-    //everything's on a grid.
-//    for( int i = 0; i < GRID_WIDTH - 1; i++) {
-//        for( int j = 0; j < GRID_LENGTH - 1; j++) {
-//            //don't just draw a building ANYWHERE.
-//            if( i % 2 && j % 2 && getRand() < 0.4f ) {
-//                // translate to spot
-//                // compute random height
-//                GLdouble height = powf(getRand(), 2.5)*10 + 1;  //center buildings are bigger!
-//                // translate up to grid plus make them float slightly to avoid depth fighting/aliasing
-//                modelMtx = glm::translate( modelMtx, glm::vec3(0, height/2.0f + 0.1, 0) );
-//                // scale to building size
-//                modelMtx = glm::scale( modelMtx, glm::vec3(1, height, 1) );
-//
-//                // compute random color
-//                glm::vec3 color( getRand(), getRand(), getRand() );
-//
-//                // store building properties
-//                BuildingData currentBuilding;
-//                currentBuilding.modelMatrix = modelMtx;
-//                currentBuilding.color = color;
-//                buildings.emplace_back( currentBuilding );
-//            }
-//        }
-//    }
-
-//    glm::mat4 modelMtx = glm::translate( glm::mat4(1.0), glm::vec3(((GLfloat) - GRID_WIDTH / 2.0f) * GRID_SPACING, 0.0f, ((GLfloat) - GRID_LENGTH / 2.0f) * GRID_SPACING) );
 
 
     for (int row = GRID_START; row < GRID_END; row++) {
@@ -1241,8 +1129,6 @@ void setupScene() {
 	camAngles = glm::vec3( -float(M_PI/2), 1.5f, 1.0f);
 	cameraSpeed = glm::vec2(0.25f, 0.02f);
 	updateCameraDirection();
-
-	propAngle = 0.0f;
 
     srand( time(nullptr) );                 // seed our random number generator
     generateEnvironmentDL();                // create our environment display list
