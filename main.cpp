@@ -1040,7 +1040,7 @@ void generateEnvironmentDL() {
 
 //    glm::mat4 modelMtx = glm::translate( glm::mat4(1.0), glm::vec3(((GLfloat) - GRID_WIDTH / 2.0f) * GRID_SPACING, 0.0f, ((GLfloat) - GRID_LENGTH / 2.0f) * GRID_SPACING) );
 
-
+// just check
     for (int row = GRID_START; row < GRID_END; row++) {
         for (int column = GRID_START; column < GRID_END; column++) {
             if (row % 2 == 0 && column % 2 == 0 && getRand() < 0.05) {
