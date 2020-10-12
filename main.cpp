@@ -220,7 +220,7 @@ void computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::ma
 //
 ////////////////////////////////////////////////////////////////////////////////
 static void error_callback( int error, const char* description ) {
-	fprintf( stderr, "[ERROR]: (%d) %s\n", error, description );
+    fprintf( stderr, "[ERROR]: (%d) %s\n", error, description );
 }
 
 // keyboard_callback() /////////////////////////////////////////////////////////////
@@ -232,31 +232,31 @@ static void error_callback( int error, const char* description ) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 static void keyboard_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
-	if( action == GLFW_PRESS ) {
-	    // store that a key had been pressed
+    if( action == GLFW_PRESS ) {
+        // store that a key had been pressed
 
 
-	    keys[key] = GL_TRUE;
+        keys[key] = GL_TRUE;
 
-		switch( key ) {
-		    // close our window and quit our program
-			case GLFW_KEY_ESCAPE:
-			    break;
-			case GLFW_KEY_Z:
+        switch( key ) {
+            // close our window and quit our program
+            case GLFW_KEY_ESCAPE:
+                break;
+            case GLFW_KEY_Z:
                 view+=1;
                 break;
-		    case GLFW_KEY_P:
+            case GLFW_KEY_P:
                 charor+=1;
                 break;
 
-			case GLFW_KEY_Q:
-				glfwSetWindowShouldClose(window, GLFW_TRUE);
-				break;
-		    case GLFW_KEY_C:
+            case GLFW_KEY_Q:
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+                break;
+            case GLFW_KEY_C:
 
-		        if (cameraTypeRotation > 2) {
-		            cameraTypeRotation = 0;
-		        }
+                if (cameraTypeRotation > 2) {
+                    cameraTypeRotation = 0;
+                }
 
                 if (cameraTypeRotation == 0) {
                     freeCam = true;
@@ -273,7 +273,7 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
                     freeCam = false;
                     arcBall = false;
 
-		        }
+                }
                 camAngles.x = -M_PI / 3.0f;
                 camAngles.y = M_PI / 2.8f;
                 updateCameraDirection();
@@ -281,12 +281,12 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
                 cameraTypeRotation++;
 
             default:
-		        break;
-		}
-	} else if( action == GLFW_RELEASE ) {
-	    // store that a key is no longer being pressed
-	    keys[key] = GL_FALSE;
-	}
+                break;
+        }
+    } else if( action == GLFW_RELEASE ) {
+        // store that a key is no longer being pressed
+        keys[key] = GL_FALSE;
+    }
 }
 
 // cursor_callback() ///////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ static void cursor_callback( GLFWwindow* window, double xPos, double yPos) {
                 }
                 mousePosition = glm::vec2( xPos, yPos);
             }
-            // passive motion
+                // passive motion
             else {
 
             }
@@ -326,12 +326,12 @@ static void cursor_callback( GLFWwindow* window, double xPos, double yPos) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 static void mouse_button_callback( GLFWwindow *window, int button, int action, int mods ) {
-	if( button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    if( button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         leftMouseDown = GL_TRUE;
-  } else {
+    } else {
         leftMouseDown = GL_FALSE;
-	    mousePosition = glm::vec2(-9999.0f, -9999.0f);
-	}
+        mousePosition = glm::vec2(-9999.0f, -9999.0f);
+    }
 }
 
 //*************************************************************************************
@@ -910,10 +910,10 @@ void updateScene() {
             rotateWheelSpeed += 0.5f;
             if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
                 printf("goinw");
-                    printf("%d",trimanYLocation);
-                    printf(" ");
-                    trimanYLocation -= cos(triRot)  * 0.5;
-                    printf("%d",trimanYLocation);
+                printf("%d",trimanYLocation);
+                printf(" ");
+                trimanYLocation -= cos(triRot)  * 0.5;
+                printf("%d",trimanYLocation);
                 printf(" ");
 
             }
@@ -1096,44 +1096,44 @@ void generateEnvironmentDL() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 GLFWwindow* setupGLFW() {
-	// set what function to use when registering errors
-	// this is the ONLY GLFW function that can be called BEFORE GLFW is initialized
-	// all other GLFW calls must be performed after GLFW has been initialized
-	glfwSetErrorCallback( error_callback );
+    // set what function to use when registering errors
+    // this is the ONLY GLFW function that can be called BEFORE GLFW is initialized
+    // all other GLFW calls must be performed after GLFW has been initialized
+    glfwSetErrorCallback( error_callback );
 
-	// initialize GLFW
-	if( !glfwInit() ) {
-		fprintf( stderr, "[ERROR]: Could not initialize GLFW\n" );
-		exit( EXIT_FAILURE );
-	} else {
-		fprintf( stdout, "[INFO]: GLFW initialized\n" );
-	}
+    // initialize GLFW
+    if( !glfwInit() ) {
+        fprintf( stderr, "[ERROR]: Could not initialize GLFW\n" );
+        exit( EXIT_FAILURE );
+    } else {
+        fprintf( stdout, "[INFO]: GLFW initialized\n" );
+    }
 
     glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );					// request forward compatible OpenGL context
     glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );	    // request OpenGL Core Profile context
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );	                // request OpenGL v4.X
-	glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );	                // request OpenGL vX.1
-	glfwWindowHint( GLFW_RESIZABLE, GLFW_FALSE );		                    // do not allow our window to be able to be resized
-	glfwWindowHint( GLFW_DOUBLEBUFFER, GLFW_TRUE );                         // request double buffering
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );	                // request OpenGL v4.X
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 1 );	                // request OpenGL vX.1
+    glfwWindowHint( GLFW_RESIZABLE, GLFW_FALSE );		                    // do not allow our window to be able to be resized
+    glfwWindowHint( GLFW_DOUBLEBUFFER, GLFW_TRUE );                         // request double buffering
 
-	// create a window for a given size, with a given title
-	GLFWwindow *window = glfwCreateWindow( WINDOW_WIDTH, WINDOW_HEIGHT, "Lab05 - Flight Simulator v0.41 alpha", nullptr, nullptr );
-	if( !window ) {						// if the window could not be created, NULL is returned
-		fprintf( stderr, "[ERROR]: GLFW Window could not be created\n" );
-		glfwTerminate();
-		exit( EXIT_FAILURE );
-	} else {
-		fprintf( stdout, "[INFO]: GLFW Window created\n" );
-	}
+    // create a window for a given size, with a given title
+    GLFWwindow *window = glfwCreateWindow( WINDOW_WIDTH, WINDOW_HEIGHT, "Lab05 - Flight Simulator v0.41 alpha", nullptr, nullptr );
+    if( !window ) {						// if the window could not be created, NULL is returned
+        fprintf( stderr, "[ERROR]: GLFW Window could not be created\n" );
+        glfwTerminate();
+        exit( EXIT_FAILURE );
+    } else {
+        fprintf( stdout, "[INFO]: GLFW Window created\n" );
+    }
 
-	glfwMakeContextCurrent(window);		                                    // make the created window the current window
-	glfwSwapInterval(1);				     	                    // update our screen after at least 1 screen refresh
+    glfwMakeContextCurrent(window);		                                    // make the created window the current window
+    glfwSwapInterval(1);				     	                    // update our screen after at least 1 screen refresh
 
-	glfwSetKeyCallback( window, keyboard_callback );						// set our keyboard callback function
-	glfwSetCursorPosCallback( window, cursor_callback );					// set our cursor position callback function
-	glfwSetMouseButtonCallback( window, mouse_button_callback );	        // set our mouse button callback function
+    glfwSetKeyCallback( window, keyboard_callback );						// set our keyboard callback function
+    glfwSetCursorPosCallback( window, cursor_callback );					// set our cursor position callback function
+    glfwSetMouseButtonCallback( window, mouse_button_callback );	        // set our mouse button callback function
 
-	return window;						                                    // return the window that was created
+    return window;						                                    // return the window that was created
 }
 
 // setupOpenGL() ///////////////////////////////////////////////////////////////
@@ -1236,19 +1236,19 @@ void setupScene() {
     leftMouseDown = false;
     mousePosition = glm::vec2(-9999.0f, -9999.0f);
 
-	// give the camera a scenic starting point.
-	camPos = glm::vec3(60.0f, 40.0f, 30.0f);
-	camAngles = glm::vec3( -float(M_PI/2), 1.5f, 1.0f);
-	cameraSpeed = glm::vec2(0.25f, 0.02f);
-	updateCameraDirection();
+    // give the camera a scenic starting point.
+    camPos = glm::vec3(60.0f, 40.0f, 30.0f);
+    camAngles = glm::vec3( -float(M_PI/2), 1.5f, 1.0f);
+    cameraSpeed = glm::vec2(0.25f, 0.02f);
+    updateCameraDirection();
 
-	propAngle = 0.0f;
+    propAngle = 0.0f;
 
     srand( time(nullptr) );                 // seed our random number generator
     generateEnvironmentDL();                // create our environment display list
 
     lightingShader->useProgram();           // use our lighting shader program so when
-                                            // assign uniforms, they get sent to this shader
+    // assign uniforms, they get sent to this shader
 
     glm::vec3 lightDirection = glm::vec3(-1.0,-1.0,-1.0);
     glm::vec3 lightColor = glm::vec3(1,1,1);
@@ -1285,31 +1285,31 @@ int main() {
     // needed to connect our 3D Object Library to our shader
     CSCI441::setVertexAttributeLocations( lightingShaderAttributes.vPos, lightingShaderAttributes.vNormal );
 
-	//  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
-	//	until the user decides to close the window and quit the program.  Without a loop, the
-	//	window will display once and then the program exits.
-	while( !glfwWindowShouldClose(window) ) {	// check if the window was instructed to be closed
+    //  This is our draw loop - all rendering is done here.  We use a loop to keep the window open
+    //	until the user decides to close the window and quit the program.  Without a loop, the
+    //	window will display once and then the program exits.
+    while( !glfwWindowShouldClose(window) ) {	// check if the window was instructed to be closed
         glDrawBuffer( GL_BACK );				// work with our back frame buffer
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	// clear the current color contents and depth buffer in the window
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );	// clear the current color contents and depth buffer in the window
 
         NotEvanVaughanMotion += 0.05f;
 
         // update the projection matrix based on the window size
-		// the GL_PROJECTION matrix governs properties of the view coordinates;
-		// i.e. what gets seen - use a perspective projection that ranges
-		// with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
-		glm::mat4 projMtx = glm::perspective( 45.0f, (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.001f, 10000.0f );
+        // the GL_PROJECTION matrix governs properties of the view coordinates;
+        // i.e. what gets seen - use a perspective projection that ranges
+        // with a FOV of 45 degrees, for our current aspect ratio, and Z ranges from [0.001, 1000].
+        glm::mat4 projMtx = glm::perspective( 45.0f, (GLfloat)WINDOW_WIDTH / (GLfloat)WINDOW_HEIGHT, 0.001f, 10000.0f );
 
-		// Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
-		// when using a Retina display the actual window can be larger than the requested window.  Therefore
-		// query what the actual size of the window we are rendering to is.
-		GLint framebufferWidth, framebufferHeight;
-		glfwGetFramebufferSize( window, &framebufferWidth, &framebufferHeight );
+        // Get the size of our framebuffer.  Ideally this should be the same dimensions as our window, but
+        // when using a Retina display the actual window can be larger than the requested window.  Therefore
+        // query what the actual size of the window we are rendering to is.
+        GLint framebufferWidth, framebufferHeight;
+        glfwGetFramebufferSize( window, &framebufferWidth, &framebufferHeight );
 
-		// update the viewport - tell OpenGL we want to render to the whole window
-		glViewport( 0, 0, framebufferWidth, framebufferHeight );
+        // update the viewport - tell OpenGL we want to render to the whole window
+        glViewport( 0, 0, framebufferWidth, framebufferHeight );
 
-		// set up our look at matrix to position our camera
+        // set up our look at matrix to position our camera
 
         glm::mat4 viewMtx = glm::lookAt( camPos, camPos + camDir, glm::vec3(  0,  1,  0 ) );
         //printf("go");
@@ -1367,18 +1367,18 @@ int main() {
 
             }
 
-		}
+        }
 
-		renderScene( viewMtx, projMtx );					// draw everything to the window
+        renderScene( viewMtx, projMtx );					// draw everything to the window
 
-		glfwSwapBuffers(window);                            // flush the OpenGL commands and make sure they get rendered!
-		glfwPollEvents();				                    // check for any events and signal to redraw screen
+        glfwSwapBuffers(window);                            // flush the OpenGL commands and make sure they get rendered!
+        glfwPollEvents();				                    // check for any events and signal to redraw screen
 
         updateScene();
-	}
+    }
 
-	fprintf( stdout, "[INFO]: Shutting down.......\n" );
-	fprintf( stdout, "[INFO]: ...freeing memory...\n" );
+    fprintf( stdout, "[INFO]: Shutting down.......\n" );
+    fprintf( stdout, "[INFO]: ...freeing memory...\n" );
 
     delete lightingShader;                                  // delete our shader program
     glDeleteBuffers(1, &groundVAO);                         // delete our ground VAO
@@ -1393,5 +1393,5 @@ int main() {
     fprintf( stdout, "[INFO]: ............complete\n" );
     fprintf( stdout, "[INFO]: Goodbye\n" );
 
-	return EXIT_SUCCESS;				                    // exit our program successfully!
+    return EXIT_SUCCESS;				                    // exit our program successfully!
 }
