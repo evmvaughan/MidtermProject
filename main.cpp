@@ -80,6 +80,7 @@ bool firstPerson = false;
 bool arcBall = false;
 bool freeCam= true;
 
+// Defines which character we are controlling
 int charor= 0;
 
 GLdouble cameraTheta, cameraPhi;            // camera DIRECTION in spherical coordinates
@@ -95,7 +96,8 @@ int cameraTypeRotation = 0;
 
 enum heros {
     NotEvanVaughan,
-    TriangleMan
+    TriangleMan,
+    DokutahReed
 } selectedHero;
 
 // Not Evan Vaughan
@@ -107,18 +109,8 @@ float NotEvanVaughanYLocation = 0;
 float trimanXLocation = 10;
 float trimanYLocation = 10;
 
-float cXLocation = 20;
-float cYLocation = 20;
-
 float lXLocation = 30;
 float lYLocation = 30;
-
-
-
-
-
-
-
 
 int carWidth = 4;
 int carLength = 8;
@@ -126,12 +118,16 @@ int carLength = 8;
 float carSpeed = 0;
 float carRotation = - float(M_PI/2);
 float triRot= float(M_PI/2);
-float cRot= float(M_PI/2);
 float lRot= float(M_PI/2);
 float rotateWheelSpeed = carSpeed / 2;
 float NotEvanVaughanMotion = 0;
 float trimanMotion = 0;
 
+// Dokutah Reed
+float cRot= float(M_PI/2);
+float cXLocation = 20;
+float cYLocation = 20;
+float cubeLength = 3;
 
 //*************************************************************************************
 //
@@ -234,7 +230,6 @@ static void error_callback( int error, const char* description ) {
 static void keyboard_callback( GLFWwindow *window, int key, int scancode, int action, int mods ) {
     if( action == GLFW_PRESS ) {
         // store that a key had been pressed
-
 
         keys[key] = GL_TRUE;
 
@@ -590,13 +585,52 @@ void drawcubebody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     }
 }
+void drawDonuts (int donutNum,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
-void drawCman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
+    // rotate
+    modelMtx = glm::rotate(modelMtx, float(-M_PI/2), glm::vec3(0, 1, 0));
+
+    float offsetZ = 1.5;
+    float offsetX = -3.5;
+    switch (donutNum) {
+        case 0:
+            modelMtx = glm::translate(modelMtx, glm::vec3(offsetX, 0, -2.0 + offsetZ));
+            break;
+        case 1:
+            modelMtx = glm::translate(modelMtx, glm::vec3(offsetX, 0,2.0 + offsetZ));
+            break;
+        case 2:
+            modelMtx = glm::translate(modelMtx, glm::vec3(1.5 + offsetX, 0, offsetZ));
+            break;
+    }
+    // shift up
+    modelMtx = glm::translate(modelMtx, glm::vec3(0, 1.5, 0));
+
+    computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
+    glm::vec3 donutColor(0.9, 0.9, 0.9);
+    glUniform3fv(lightingShaderUniforms.materialColor, 1, &donutColor[0]);
+    CSCI441::drawSolidTorus(0.5,1.0,30,30);
+}
+
+void drawReedCube (glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
+
+    float bumping = getRand()/5;
+
+    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, cubeLength/2.0 + bumping, -3.5));
+    computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
+    glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
+    glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+    CSCI441::drawSolidCube(cubeLength);
+}
+
+void drawDokutahReed(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
 
     modelMtx = glm::translate(modelMtx, glm::vec3(cXLocation, 0.0f, cYLocation));
     modelMtx = glm::rotate(modelMtx, cRot, CSCI441::Y_AXIS);
-    drawcubebody(modelMtx, viewMtx, projMtx);
-
+    drawReedCube(modelMtx, viewMtx, projMtx);
+    drawDonuts(0, modelMtx, viewMtx, projMtx);
+    drawDonuts(1, modelMtx, viewMtx, projMtx);
+    drawDonuts(2, modelMtx, viewMtx, projMtx);
 }
 
 
@@ -728,7 +762,7 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
 
     drawNotEvanVaughan(modelMtx, viewMtx, projMtx);
     drawtriman(modelMtx, viewMtx, projMtx);
-    drawCman(modelMtx, viewMtx, projMtx);
+    drawDokutahReed(modelMtx, viewMtx, projMtx);
     drawlman(modelMtx, viewMtx, projMtx);
 
     // we are going to cheat and use our look at point to place our plane so it is always in view
@@ -833,7 +867,7 @@ void updateScene() {
 
 
             if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-                printf("goinx");
+                //printf("goinx");
                 if (trimanXLocation + sin(triRot) < 50) {
                     trimanXLocation += sin(triRot) * 0.5;
                 }
@@ -855,7 +889,7 @@ void updateScene() {
 
 
             if (cXLocation > -50 || cXLocation - sin(triRot) > -50) {
-                printf("goinx");
+                //printf("goinx");
                 if (cXLocation + sin(cRot) < 50) {
                     cXLocation += sin(cRot) * 0.5;
                 }
@@ -876,7 +910,7 @@ void updateScene() {
 
 
             if (lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-                printf("goinx");
+                //printf("goinx");
                 if (lXLocation + sin(lRot) < 50) {
                     lXLocation += sin(lRot) * 0.5;
                 }
@@ -906,21 +940,21 @@ void updateScene() {
         }
 
         if (charor%carnumber==1) {
-            printf("gow");
+            //printf("gow");
             rotateWheelSpeed += 0.5f;
             if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
-                printf("goinw");
-                printf("%d",trimanYLocation);
-                printf(" ");
+//                printf("goinw");
+//                printf("%d",trimanYLocation);
+//                printf(" ");
                 trimanYLocation -= cos(triRot)  * 0.5;
-                printf("%d",trimanYLocation);
-                printf(" ");
+//                printf("%d",trimanYLocation);
+//                printf(" ");
 
             }
 
 
             if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-                printf("goinx");
+//                printf("goinx");
                 if (trimanXLocation - sin(triRot) < 50) {
                     trimanXLocation -= sin(triRot) * 0.5;
                 }
@@ -928,21 +962,21 @@ void updateScene() {
         }
 
         if (charor%carnumber==2) {
-            printf("gow");
+//            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (cYLocation > -50 || cYLocation - cos(cRot) > -50) {
-                printf("goinw");
-                printf("%d",trimanYLocation);
-                printf(" ");
-                cYLocation -= cos(cRot)  * 0.5;
-                printf("%d",cYLocation);
-                printf(" ");
+//                printf("goinw");
+//                printf("%d",trimanYLocation);
+//                printf(" ");
+//                cYLocation -= cos(cRot)  * 0.5;
+//                printf("%d",cYLocation);
+//                printf(" ");
 
             }
 
 
             if ( cXLocation > -50 || cXLocation - sin(cRot) > -50) {
-                printf("goinx");
+//                printf("goinx");
                 if ( cXLocation - sin(cRot) < 50) {
                     cXLocation -= sin(cRot) * 0.5;
                 }
@@ -950,31 +984,26 @@ void updateScene() {
         }
 
         if (charor%carnumber==3) {
-            printf("gow");
+//            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (lYLocation > -50 || lYLocation - cos(cRot) > -50) {
-                printf("goinw");
-                printf("%d",trimanYLocation);
-                printf(" ");
+//                printf("goinw");
+//                printf("%d",trimanYLocation);
+//                printf(" ");
                 lYLocation -= cos(lRot)  * 0.5;
-                printf("%d",lYLocation);
-                printf(" ");
+//                printf("%d",lYLocation);
+//                printf(" ");
 
             }
 
 
             if ( lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-                printf("goinx");
+//                printf("goinx");
                 if ( lXLocation - sin(lRot) < 50) {
                     lXLocation -= sin(lRot) * 0.5;
                 }
             }
         }
-
-
-
-
-
 
     }
 
