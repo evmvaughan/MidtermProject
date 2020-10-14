@@ -97,7 +97,8 @@ int cameraTypeRotation = 0;
 enum heros {
     NotEvanVaughan,
     TriangleMan,
-    DokutahReed
+    DokutahReed,
+    LastMan
 } selectedHero;
 
 // Not Evan Vaughan
@@ -125,8 +126,8 @@ float trimanMotion = 0;
 
 // Dokutah Reed
 float cRot= float(M_PI/2);
-float cXLocation = 20;
-float cYLocation = 20;
+float DokutahReed_XLocation = 20;
+float DokutahReed_YLocation = 20;
 float cubeLength = 3;
 
 //*************************************************************************************
@@ -182,7 +183,6 @@ void updateCameraDirection() {
         // normalize the direction for a free cam
         camDir = glm::normalize(camDir);
     }
-
 }
 
 // computeAndSendMatrixUniforms() ///////////////////////////////////////////////
@@ -242,6 +242,7 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
                 break;
             case GLFW_KEY_P:
                 charor+=1;
+
                 break;
 
             case GLFW_KEY_Q:
@@ -301,7 +302,6 @@ static void cursor_callback( GLFWwindow* window, double xPos, double yPos) {
                 if( !((mousePosition.x - -9999.0f) < 0.001f) ) {
                     camAngles.x += (xPos - mousePosition.x) * 0.005f;
                     camAngles.y += (mousePosition.y - yPos) * 0.005f;
-
                     updateCameraDirection();
                 }
                 mousePosition = glm::vec2( xPos, yPos);
@@ -590,17 +590,15 @@ void drawDonuts (int donutNum,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4
     // rotate
     modelMtx = glm::rotate(modelMtx, float(-M_PI/2), glm::vec3(0, 1, 0));
 
-    float offsetZ = 1.5;
-    float offsetX = -3.5;
     switch (donutNum) {
         case 0:
-            modelMtx = glm::translate(modelMtx, glm::vec3(offsetX, 0, -2.0 + offsetZ));
+            modelMtx = glm::translate(modelMtx, glm::vec3(0, 0, -2.0 ));
             break;
         case 1:
-            modelMtx = glm::translate(modelMtx, glm::vec3(offsetX, 0,2.0 + offsetZ));
+            modelMtx = glm::translate(modelMtx, glm::vec3(0, 0, 2.0));
             break;
         case 2:
-            modelMtx = glm::translate(modelMtx, glm::vec3(1.5 + offsetX, 0, offsetZ));
+            modelMtx = glm::translate(modelMtx, glm::vec3(1.5, 0, 0));
             break;
     }
     // shift up
@@ -616,7 +614,8 @@ void drawReedCube (glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     float bumping = getRand()/5;
 
-    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, cubeLength/2.0 + bumping, -3.5));
+//    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, cubeLength/2.0 + bumping, -3.5));
+    modelMtx = glm::translate(modelMtx, glm::vec3(0, cubeLength/2.0 + bumping, 0));
     computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
     glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
@@ -625,7 +624,7 @@ void drawReedCube (glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
 void drawDokutahReed(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
 
-    modelMtx = glm::translate(modelMtx, glm::vec3(cXLocation, 0.0f, cYLocation));
+    modelMtx = glm::translate(modelMtx, glm::vec3(DokutahReed_XLocation, 0.0f, DokutahReed_YLocation));
     modelMtx = glm::rotate(modelMtx, cRot, CSCI441::Y_AXIS);
     drawReedCube(modelMtx, viewMtx, projMtx);
     drawDonuts(0, modelMtx, viewMtx, projMtx);
@@ -806,7 +805,6 @@ void updateScene() {
             lRot -= 0.05f;
         }
 
-
         if (firstPerson) {
             camAngles.x  += 0.05f;
             updateCameraDirection();
@@ -829,8 +827,6 @@ void updateScene() {
         if (charor%carnumber==3)   {
             lRot += 0.05f;
         }
-
-
 
         if (firstPerson) {
             camAngles.x -= 0.05f;
@@ -879,23 +875,19 @@ void updateScene() {
 
         if (charor%carnumber==2) {
 
-            if (cYLocation > -50 || cYLocation - cos(triRot) > -50) {
-                if (cYLocation + cos(cRot) < 50) {
-                    cYLocation += cos(cRot) * 0.5;
+            if (DokutahReed_YLocation > -50 || DokutahReed_YLocation - cos(triRot) > -50) {
+                if (DokutahReed_YLocation + cos(cRot) < 50) {
+                    DokutahReed_YLocation += cos(cRot) * 0.5;
                 }
-
-
             }
 
 
-            if (cXLocation > -50 || cXLocation - sin(triRot) > -50) {
+            if (DokutahReed_XLocation > -50 || DokutahReed_XLocation - sin(triRot) > -50) {
                 //printf("goinx");
-                if (cXLocation + sin(cRot) < 50) {
-                    cXLocation += sin(cRot) * 0.5;
+                if (DokutahReed_XLocation + sin(cRot) < 50) {
+                    DokutahReed_XLocation += sin(cRot) * 0.5;
                 }
             }
-
-
         }
 
         if (charor%carnumber==3) {
@@ -964,7 +956,7 @@ void updateScene() {
         if (charor%carnumber==2) {
 //            printf("gow");
             rotateWheelSpeed += 0.5f;
-            if (cYLocation > -50 || cYLocation - cos(cRot) > -50) {
+            if (DokutahReed_YLocation > -50 || DokutahReed_YLocation - cos(cRot) > -50) {
 //                printf("goinw");
 //                printf("%d",trimanYLocation);
 //                printf(" ");
@@ -975,10 +967,10 @@ void updateScene() {
             }
 
 
-            if ( cXLocation > -50 || cXLocation - sin(cRot) > -50) {
+            if (DokutahReed_XLocation > -50 || DokutahReed_XLocation - sin(cRot) > -50) {
 //                printf("goinx");
-                if ( cXLocation - sin(cRot) < 50) {
-                    cXLocation -= sin(cRot) * 0.5;
+                if (DokutahReed_XLocation - sin(cRot) < 50) {
+                    DokutahReed_XLocation -= sin(cRot) * 0.5;
                 }
             }
         }
@@ -1356,8 +1348,8 @@ int main() {
             }
 
             if(charor%carnumber==2) {
-                viewMtx = glm::lookAt((camDir + glm::vec3(cXLocation, 0, cYLocation)),
-                                      glm::vec3(cXLocation, 0, cYLocation),
+                viewMtx = glm::lookAt((camDir + glm::vec3(DokutahReed_XLocation, 0, DokutahReed_YLocation)),
+                                      glm::vec3(DokutahReed_XLocation, 0, DokutahReed_YLocation),
                                       glm::vec3(0, 1, 0));
             }
 
@@ -1382,8 +1374,8 @@ int main() {
 
             if(charor%carnumber==2) {
 
-                viewMtx = glm::lookAt(glm::vec3(cXLocation, 6, cYLocation),
-                                      camDir + glm::vec3(cXLocation, 6, cYLocation),
+                viewMtx = glm::lookAt(glm::vec3(DokutahReed_XLocation, 6, DokutahReed_YLocation),
+                                      camDir + glm::vec3(DokutahReed_XLocation, 6, DokutahReed_YLocation),
                                       glm::vec3(0, 1, 0));
 
             }
