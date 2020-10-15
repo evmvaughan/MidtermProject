@@ -119,6 +119,22 @@ float DokutahReed_XLocation = 20;
 float DokutahReed_YLocation = 20;
 float cubeLength = 3;
 
+
+// Fireflies
+float flySize = 0.3;
+float ffX1 = 20;
+float ffZ1 = 10;
+float ffY1 = 7;
+float ffX2 = 10;
+float ffZ2 = 40;
+float ffY2 = 8;
+float ffX3 = 15;
+float ffZ3 = 3;
+float ffY3 = 7.5;
+glm::vec3 ffDir1(1,1,1);
+glm::vec3 ffDir2(1,-1,-1);
+glm::vec3 ffDir3(-1, 1, 1);
+
 //*************************************************************************************
 //
 // Helper Functions
@@ -657,7 +673,86 @@ void drawlman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
 
 }
 
+void drawYellowCube(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx, int index) {
 
+    float dx = getRand()/10.0;
+    float dz = getRand()/10.0;
+    float dy = getRand()/10.0;
+
+    switch (index) {    // border check and change position accordingly
+        case 1:
+            if (ffX1 + dx * ffDir1[0] > 53 || ffX1 + dx * ffDir1[0] < -53) {
+                ffDir1[0] *= -1;
+            }
+            ffX1 = ffX1 + dx * ffDir1[0];
+
+            if (ffY1 + dy * ffDir1[1] > 10 || ffY1 + dy * ffDir1[1] < 3) {
+                ffDir1[1] *= -1;
+            }
+            ffY1 = ffY1 + dy * ffDir1[1];
+
+            if (ffZ1 + dz * ffDir1[2] > 53 || ffZ1 + dz * ffDir1[2] < -53) {
+                ffDir1[2] *= -1;
+            }
+            ffZ1 = ffZ1 + dz * ffDir1[2];
+
+            modelMtx = glm::translate(modelMtx, glm::vec3(ffX1 , ffY1, ffZ1));
+            break;
+
+        case 2:
+            if (ffX2 + dx * ffDir2[0] > 53 || ffX2 + dx * ffDir2[0] < -53) {
+                ffDir2[0] *= -1;
+            }
+            ffX2 = ffX2 + dx * ffDir2[0];
+
+            if (ffY2 + dy * ffDir2[1] > 10 || ffY2 + dy * ffDir2[1] < 3) {
+                ffDir2[1] *= -1;
+            }
+            ffY2 = ffY2 + dy * ffDir2[1];
+
+            if (ffZ2 + dz * ffDir2[2] > 53 || ffZ2 + dz * ffDir2[2] < -53) {
+                ffDir2[2] *= -1;
+            }
+            ffZ2 = ffZ2 + dz * ffDir2[2];
+
+            modelMtx = glm::translate(modelMtx, glm::vec3(ffX2 , ffY2, ffZ2));
+            break;
+
+        case 3:
+            if (ffX3 + dx * ffDir3[0] > 53 || ffX3 + dx * ffDir3[0] < -53) {
+                ffDir3[0] *= -1;
+            }
+            ffX3 = ffX3 + dx * ffDir3[0];
+
+            if (ffY3 + dy * ffDir3[1] > 10 || ffY3 + dy * ffDir3[1] < 3) {
+                ffDir3[1] *= -1;
+            }
+            ffY3 = ffY3 + dy * ffDir3[1];
+
+            if (ffZ3 + dz * ffDir3[2] > 53 || ffZ3 + dz * ffDir3[2] < -53) {
+                ffDir3[2] *= -1;
+            }
+            ffZ3 = ffZ3 + dz * ffDir3[2];
+
+            modelMtx = glm::translate(modelMtx, glm::vec3(ffX3 , ffY3, ffZ3));
+            break;
+    }
+
+
+
+    computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
+    glm::vec3 bodyColor(1.0f, 1.0f, 0.0f);
+    GLfloat bodySpecular(2.0f);
+    glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
+    CSCI441::drawSolidCube(flySize);
+}
+
+void drawFireFly(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
+    drawYellowCube(modelMtx, viewMtx, projMtx, 1);
+    drawYellowCube(modelMtx, viewMtx, projMtx, 2);
+    drawYellowCube(modelMtx, viewMtx, projMtx, 3);
+}
 
 
 // renderScene() ///////////////////////////////////////////////////////////////
@@ -730,7 +825,7 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
     drawtriman(modelMtx, viewMtx, projMtx);
     drawDokutahReed(modelMtx, viewMtx, projMtx);
     drawlman(modelMtx, viewMtx, projMtx);
-
+    drawFireFly(modelMtx, viewMtx, projMtx);
 }
 
 // updateScene() ////////////////////////////////////////////////////////////////
