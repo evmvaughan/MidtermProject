@@ -91,34 +91,31 @@ glm::vec3 camAngles;               		// camera DIRECTION in spherical coordinate
 glm::vec3 camDir; 			            // camera DIRECTION in cartesian coordinates
 glm::vec2 cameraSpeed;                  // cameraSpeed --> x = forward/backward delta, y = rotational delta
 
+bool isMoving = false;                  // switch for model animation
 
 float NotEvanVaughanXLocation = 0;
 float NotEvanVaughanYLocation = 0;
-
+float NotEvanVaughanMotion = 0;
+float carRotation = - float(M_PI/2);
+float carSpeed = 0;
+int carWidth = 4;
+int carLength = 8;
+float rotateWheelSpeed = carSpeed / 2;
 
 float trimanXLocation = 10;
 float trimanYLocation = 10;
+float trimanMotion = 0;
+float triRot= float(M_PI/2);
 
 float lXLocation = 30;
 float lYLocation = 30;
-
-int carWidth = 4;
-int carLength = 8;
-
-float carSpeed = 0;
-float carRotation = - float(M_PI/2);
-float triRot= float(M_PI/2);
 float lRot= float(M_PI/2);
-float rotateWheelSpeed = carSpeed / 2;
-float NotEvanVaughanMotion = 0;
-float trimanMotion = 0;
 
 // Dokutah Reed
 float cRot= float(M_PI/2);
 float DokutahReed_XLocation = 20;
 float DokutahReed_YLocation = 20;
 float cubeLength = 3;
-
 
 // Fireflies
 float flySize = 0.3;
@@ -266,7 +263,17 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
     } else if( action == GLFW_RELEASE ) {
         // store that a key is no longer being pressed
         keys[key] = GL_FALSE;
+
     }
+
+    if (keys[GLFW_KEY_W] == GL_TRUE || keys[GLFW_KEY_A] == GL_TRUE ||
+        keys[GLFW_KEY_S] == GL_TRUE || keys[GLFW_KEY_D] == GL_TRUE ) {
+        isMoving = true;
+    } else {
+        isMoving = false;
+    }
+
+
 }
 
 // cursor_callback() ///////////////////////////////////////////////////////////
@@ -382,7 +389,11 @@ void drawWheel(int wheelNumber,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat
 
 void drawCarBody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
-    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(NotEvanVaughanMotion) + 1.0f, -3.5));
+    if (isMoving && charor%carnumber == 0) {
+        modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(NotEvanVaughanMotion) + 1.0f, -3.5));
+    } else {
+        modelMtx = glm::translate(modelMtx, glm::vec3(-1.5,  1.0f, -3.5));
+    }
 
     modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -456,6 +467,7 @@ void drawNotEvanVaughan(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx
     drawWheel(2, modelMtx, viewMtx, projMtx);
     drawWheel(3, modelMtx, viewMtx, projMtx);
     drawWheel(4, modelMtx, viewMtx, projMtx);
+
 }
 
 
@@ -526,57 +538,17 @@ void drawtribody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
 void drawtriman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
 
-    modelMtx = glm::translate(modelMtx, glm::vec3(trimanXLocation, 0.0f, trimanYLocation));
+    if (isMoving && charor%carnumber == 1) {
+        modelMtx = glm::translate(modelMtx, glm::vec3(trimanXLocation, getRand()/5.0, trimanYLocation));
+    } else {
+        modelMtx = glm::translate(modelMtx, glm::vec3(trimanXLocation, 0.0f, trimanYLocation));
+    }
+
     modelMtx = glm::rotate(modelMtx, triRot, CSCI441::Y_AXIS);
     drawtribody(modelMtx, viewMtx, projMtx);
 
 }
 
-
-void drawcubebody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
-
-    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, 0.5f * sin(trimanMotion) + 1.0f, -3.5));
-
-    modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
-
-    GLfloat bodySpecular(2.0f);
-    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
-    for (int col = 0; col < 2; col++) {
-        for (int row = 0; row < 8; row++) {
-            glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
-            computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
-            glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
-            glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
-            CSCI441::drawSolidCubeFlat(1);
-        }
-    }
-
-    for (int col = 0; col < 2; col++) {
-        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 2.0f, 7.0f));
-        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
-        glm::vec3 bodyColor(0.0f, 0.0f, 1.0f);
-        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
-        CSCI441::drawSolidCubeFlat(1);
-    }
-//
-    for (int col = 0; col < 4; col++) {
-        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(2*col, 3.0f, 6.0f));
-        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
-        glm::vec3 bodyColor(0.0f, 1.0f, 0.0f);
-        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
-        CSCI441::drawSolidCubeFlat(1);
-    }
-//
-    for (int col = 0; col < 2; col++) {
-
-        glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(3*col + 1.0f, 2.0f, 0));
-        computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
-        glm::vec3 bodyColor(1.0f, 0.0f, 0.0f);
-        glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
-        CSCI441::drawSolidCubeFlat(1);
-
-    }
-}
 void drawDonuts (int donutNum,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     // rotate
@@ -606,10 +578,12 @@ void drawDonuts (int donutNum,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4
 
 void drawReedCube (glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
-    float bumping = getRand()/5;
+    if (isMoving && charor%carnumber == 2) {
+        modelMtx = glm::translate(modelMtx, glm::vec3(0, cubeLength/2.0 + getRand()/5.0, 0));
+    } else {
+        modelMtx = glm::translate(modelMtx, glm::vec3(0, cubeLength/2.0, 0));
+    }
 
-//    modelMtx = glm::translate(modelMtx, glm::vec3(-1.5, cubeLength/2.0 + bumping, -3.5));
-    modelMtx = glm::translate(modelMtx, glm::vec3(0, cubeLength/2.0 + bumping, 0));
     computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
     glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
     GLfloat bodySpecular(2.0f);
@@ -666,8 +640,12 @@ void drawlastbody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 }
 
 void drawlman(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx){
+    if (isMoving && charor%carnumber == 3) {
+        modelMtx = glm::translate(modelMtx, glm::vec3(lXLocation, getRand()/5.0, lYLocation));
+    } else {
+        modelMtx = glm::translate(modelMtx, glm::vec3(lXLocation, 0.0f, lYLocation));
+    }
 
-    modelMtx = glm::translate(modelMtx, glm::vec3(lXLocation, 0.0f, lYLocation));
     modelMtx = glm::rotate(modelMtx, lRot, CSCI441::Y_AXIS);
     drawlastbody(modelMtx, viewMtx, projMtx);
 
@@ -904,7 +882,6 @@ void updateScene() {
                 && lXLocation + sin(lRot) < 50)
                     lXLocation += sin(lRot) * 0.5;
         }
-
     }
     // pitch down
     if( keys[GLFW_KEY_S] ) {
