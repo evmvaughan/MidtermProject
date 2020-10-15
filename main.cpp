@@ -50,8 +50,11 @@ struct LightingShaderUniforms {         // stores the locations of all of our sh
     GLint mNormal;
     GLint lightDirection;
     GLint lightColor;
+    GLint modelMtx;
     GLint mvpMatrix;
     GLint materialColor;
+    GLint specularAlpha;
+    GLint viewDirection;
 } lightingShaderUniforms;
 struct LightingShaderAttributes {       // stores the locations of all of our shader attributes
     GLint vNormal;
@@ -61,11 +64,13 @@ struct LightingShaderAttributes {       // stores the locations of all of our sh
 struct TreeTrunkData {                       // keeps track of an individual building's attributes
     glm::mat4 modelMatrix;                      // its position and size
     glm::vec3 color;                            // its color
+    GLfloat specular;                           // its specular alpha
 };
 
 struct TreeLeavesData {
     glm::mat4 modelMatrix;
     glm::vec3 color;
+    GLfloat specular;
 };
 
 std::vector<TreeTrunkData> treeTrunks;        // stores all of our building information
@@ -164,7 +169,7 @@ void updateCameraDirection() {
 
         // normalize the direction for a free cam
         camDir = glm::normalize(camDir);
-        printf("%d %d %d\n",camDir.x,camDir.z,camDir.z);
+//        printf("%d %d %d\n",camDir.x,camDir.z,camDir.z);
         camDir *= 10;
     } else if (view%3==2) {
         // convert from spherical to cartesian in our RH coord. sys.
@@ -194,8 +199,10 @@ void updateCameraDirection() {
 ////////////////////////////////////////////////////////////////////////////////
 void computeAndSendMatrixUniforms(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
     // precompute the Model-View-Projection matrix on the CPU
+    glm::mat4 _modelMtx = modelMtx;
     glm::mat4 mvpMtx = projMtx * viewMtx * modelMtx;
     // then send it to the shader on the GPU to apply to every vertex
+    glUniformMatrix4fv( lightingShaderUniforms.modelMtx, 1, GL_FALSE, &_modelMtx[0][0] );
     glUniformMatrix4fv( lightingShaderUniforms.mvpMatrix, 1, GL_FALSE, &mvpMtx[0][0] );
 
     glm::mat3 normalMtx = glm::mat3( glm::transpose( glm::inverse( modelMtx ) ) );
@@ -378,7 +385,9 @@ void drawWheel(int wheelNumber,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat
     computeAndSendMatrixUniforms(modelMtx1, viewMtx, projMtx);
 
     glm::vec3 bodyColor(0.2f, 0.2f, 0.2f);
+    GLfloat bodySpecular(0.8f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
     CSCI441::drawSolidCylinder(1.0, 1.0, 1.0, 10, 10);
 
     glm::mat4 modelMtx2 = glm::translate(modelMtx, glm::vec3(x_location, 0.0f, z_location));
@@ -400,6 +409,8 @@ void drawCarBody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
 
+    GLfloat bodySpecular(12.0f);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
     for (int col = 0; col < 4; col++) {
         for (int row = 0; row < 8; row++) {
             glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
@@ -477,6 +488,8 @@ void drawtribody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
 
+    GLfloat bodySpecular(2.0f);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
     for (int col = 0; col < 4; col++) {
         for (int row = 0; row < 8; row++) {
             glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
@@ -549,6 +562,8 @@ void drawcubebody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
 
+    GLfloat bodySpecular(2.0f);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
     for (int col = 0; col < 2; col++) {
         for (int row = 0; row < 8; row++) {
             glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 1.0f, row));
@@ -606,7 +621,9 @@ void drawDonuts (int donutNum,  glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4
 
     computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
     glm::vec3 donutColor(0.9, 0.9, 0.9);
+    GLfloat donutSpecular(0.3f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &donutColor[0]);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &donutSpecular);
     CSCI441::drawSolidTorus(0.5,1.0,30,30);
 }
 
@@ -618,7 +635,9 @@ void drawReedCube (glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
     modelMtx = glm::translate(modelMtx, glm::vec3(0, cubeLength/2.0 + bumping, 0));
     computeAndSendMatrixUniforms(modelMtx, viewMtx, projMtx);
     glm::vec3 bodyColor(1.0f, 1.0f, 1.0f);
+    GLfloat bodySpecular(2.0f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &bodyColor[0]);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
     CSCI441::drawSolidCube(cubeLength);
 }
 
@@ -639,7 +658,8 @@ void drawlastbody(glm::mat4 modelMtx, glm::mat4 viewMtx, glm::mat4 projMtx) {
 
     modelMtx = glm::scale(modelMtx, glm::vec3(1.0f, 1.0f, 1.0f));
 
-
+    GLfloat bodySpecular(2.0f);
+    glUniform1fv(lightingShaderUniforms.specularAlpha, 1, &bodySpecular);
 
     for (int col = 0; col < 8; col++) {
         glm::mat4 modelMtx1 = glm::translate(modelMtx, glm::vec3(col, 2.0f, 7.0f));
@@ -695,7 +715,9 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
     computeAndSendMatrixUniforms(groundModelMtx, viewMtx, projMtx);
 
     glm::vec3 groundColor(0.3f, 0.8f, 0.2f);
+    GLfloat groundSpecular(1.0f);
     glUniform3fv(lightingShaderUniforms.materialColor, 1, &groundColor[0]);
+    glUniform1fv(lightingShaderUniforms.materialColor, 1, &groundSpecular);
 
     glBindVertexArray(groundVAO);
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, (void*)0);
@@ -711,18 +733,22 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
 
         computeAndSendMatrixUniforms(currentTrunk.modelMatrix, viewMtx, projMtx);
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentTrunk.color[0]);
+        glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentTrunk.specular);
         CSCI441::drawSolidCube(1.0);
 
         computeAndSendMatrixUniforms(currentLeafLayer1.modelMatrix, viewMtx, projMtx);
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer1.color[0]);
+        glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer1.specular);
         CSCI441::drawSolidCube(1.0);
 
         computeAndSendMatrixUniforms(currentLeafLayer2.modelMatrix, viewMtx, projMtx);
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer2.color[0]);
+        glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer2.specular);
         CSCI441::drawSolidCube(1.0);
 
         computeAndSendMatrixUniforms(currentLeafLayer3.modelMatrix, viewMtx, projMtx);
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer3.color[0]);
+        glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer3.specular);
         CSCI441::drawSolidCube(1.0);
 
 //        CSCI441::SimpleShader3::pushTransformation(currentTrunk.modelMatrix);
@@ -788,23 +814,14 @@ void updateScene() {
 
     // turn right
     if( keys[GLFW_KEY_D] ) {
-
-        if (charor%carnumber==0)   {
+        if (charor%carnumber==0)
             carRotation -= 0.05f;
-        }
-
-        if (charor%carnumber==1)   {
+        if (charor%carnumber==1)
             triRot -= 0.05f;
-        }
-
-        if (charor%carnumber==2)   {
+        if (charor%carnumber==2)
             cRot -= 0.05f;
-        }
-
-        if (charor%carnumber==3)   {
+        if (charor%carnumber==3)
             lRot -= 0.05f;
-        }
-
         if (firstPerson) {
             camAngles.x  += 0.05f;
             updateCameraDirection();
@@ -812,22 +829,14 @@ void updateScene() {
     }
     // turn left
     if( keys[GLFW_KEY_A] ) {
-
-        if (charor%carnumber==0)   {
+        if (charor%carnumber==0)
             carRotation += 0.05f;
-        }
-
-        if (charor%carnumber==1)   {
+        if (charor%carnumber==1)
             triRot += 0.05f;
-        }
-
-        if (charor%carnumber==2)   {
+        if (charor%carnumber==2)
             cRot += 0.05f;
-        }
-        if (charor%carnumber==3)   {
+        if (charor%carnumber==3)
             lRot += 0.05f;
-        }
-
         if (firstPerson) {
             camAngles.x -= 0.05f;
             updateCameraDirection();
@@ -835,82 +844,39 @@ void updateScene() {
     }
     // pitch up
     if( keys[GLFW_KEY_W] ) {
-
         if (charor%carnumber==0) {
             rotateWheelSpeed -= 0.5f;
-            if (NotEvanVaughanYLocation < 50 || NotEvanVaughanYLocation + cos(carRotation) < 50) {
-                if (NotEvanVaughanYLocation + cos(carRotation) > -50) {
+            if ((NotEvanVaughanYLocation < 50 || NotEvanVaughanYLocation + cos(carRotation) < 50)
+                && NotEvanVaughanYLocation + cos(carRotation) > -50)
                     NotEvanVaughanYLocation += cos(carRotation) * 0.5;
-                }
-            }
-            if (NotEvanVaughanXLocation < 50 || NotEvanVaughanXLocation + sin(carRotation) < 50) {
-                if (NotEvanVaughanXLocation + sin(carRotation) > -50) {
+            if ((NotEvanVaughanXLocation < 50 || NotEvanVaughanXLocation + sin(carRotation) < 50)
+                && NotEvanVaughanXLocation + sin(carRotation) > -50)
                     NotEvanVaughanXLocation += sin(carRotation)  * 0.5;
-                }
-            }
         }
-
-
-        if (charor%carnumber==1) {
-
-            if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
-                if (trimanYLocation + cos(triRot) < 50) {
+        else if (charor%carnumber==1) {
+            if ((trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50)
+                && trimanYLocation + cos(triRot) < 50)
                     trimanYLocation += cos(triRot) * 0.5;
-                }
-
-
-            }
-
-
-            if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-                //printf("goinx");
-                if (trimanXLocation + sin(triRot) < 50) {
+            if ((trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50)
+                && trimanXLocation + sin(triRot) < 50)
                     trimanXLocation += sin(triRot) * 0.5;
-                }
-            }
-
-
         }
-
-
-        if (charor%carnumber==2) {
-
-            if (DokutahReed_YLocation > -50 || DokutahReed_YLocation - cos(triRot) > -50) {
-                if (DokutahReed_YLocation + cos(cRot) < 50) {
+        else if (charor%carnumber==2) {
+            if ((DokutahReed_YLocation > -50 || DokutahReed_YLocation - cos(triRot) > -50)
+                && DokutahReed_YLocation + cos(cRot) < 50)
                     DokutahReed_YLocation += cos(cRot) * 0.5;
-                }
-            }
-
-
-            if (DokutahReed_XLocation > -50 || DokutahReed_XLocation - sin(triRot) > -50) {
-                //printf("goinx");
-                if (DokutahReed_XLocation + sin(cRot) < 50) {
+            if ((DokutahReed_XLocation > -50 || DokutahReed_XLocation - sin(triRot) > -50)
+                && DokutahReed_XLocation + sin(cRot) < 50)
                     DokutahReed_XLocation += sin(cRot) * 0.5;
-                }
-            }
         }
-
         if (charor%carnumber==3) {
-
-            if (lYLocation > -50 || lYLocation - cos(lRot) > -50) {
-                if (lYLocation + cos(lRot) < 50) {
+            if ((lYLocation > -50 || lYLocation - cos(lRot) > -50)
+                && lYLocation + cos(lRot) < 50)
                     lYLocation += cos(lRot) * 0.5;
-                }
-
-
-            }
-
-
-            if (lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-                //printf("goinx");
-                if (lXLocation + sin(lRot) < 50) {
+            if ((lXLocation > -50 || lXLocation - sin(lRot) > -50)
+                && lXLocation + sin(lRot) < 50)
                     lXLocation += sin(lRot) * 0.5;
-                }
-            }
-
-
         }
-
         //triRot
         //trimanXLocation
         //trimanYLocation
@@ -930,75 +896,41 @@ void updateScene() {
                 }
             }
         }
-
         if (charor%carnumber==1) {
             //printf("gow");
             rotateWheelSpeed += 0.5f;
             if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
-//                printf("goinw");
-//                printf("%d",trimanYLocation);
-//                printf(" ");
                 trimanYLocation -= cos(triRot)  * 0.5;
-//                printf("%d",trimanYLocation);
-//                printf(" ");
-
             }
-
-
             if (trimanXLocation > -50 || trimanXLocation - sin(triRot) > -50) {
-//                printf("goinx");
                 if (trimanXLocation - sin(triRot) < 50) {
                     trimanXLocation -= sin(triRot) * 0.5;
                 }
             }
         }
-
         if (charor%carnumber==2) {
-//            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (DokutahReed_YLocation > -50 || DokutahReed_YLocation - cos(cRot) > -50) {
-//                printf("goinw");
-//                printf("%d",trimanYLocation);
-//                printf(" ");
-//                cYLocation -= cos(cRot)  * 0.5;
-//                printf("%d",cYLocation);
-//                printf(" ");
 
             }
-
-
             if (DokutahReed_XLocation > -50 || DokutahReed_XLocation - sin(cRot) > -50) {
-//                printf("goinx");
                 if (DokutahReed_XLocation - sin(cRot) < 50) {
                     DokutahReed_XLocation -= sin(cRot) * 0.5;
                 }
             }
         }
-
         if (charor%carnumber==3) {
-//            printf("gow");
             rotateWheelSpeed += 0.5f;
             if (lYLocation > -50 || lYLocation - cos(cRot) > -50) {
-//                printf("goinw");
-//                printf("%d",trimanYLocation);
-//                printf(" ");
                 lYLocation -= cos(lRot)  * 0.5;
-//                printf("%d",lYLocation);
-//                printf(" ");
-
             }
-
-
             if ( lXLocation > -50 || lXLocation - sin(lRot) > -50) {
-//                printf("goinx");
                 if ( lXLocation - sin(lRot) < 50) {
                     lXLocation -= sin(lRot) * 0.5;
                 }
             }
         }
-
     }
-
     // Free Camera Movements
     // go forward
     if( keys[GLFW_KEY_SPACE] && freeCam) {
@@ -1201,10 +1133,13 @@ void setupGLEW() {
 void setupShaders() {
     lightingShader = new CSCI441::ShaderProgram( "shaders/lab05.v.glsl", "shaders/lab05.f.glsl" );
     lightingShaderUniforms.mvpMatrix      = lightingShader->getUniformLocation("mvpMatrix");
+    lightingShaderUniforms.modelMtx       = lightingShader->getUniformLocation("modelMtx");
     lightingShaderUniforms.mNormal        = lightingShader->getUniformLocation("mNormal");
     lightingShaderUniforms.lightDirection = lightingShader->getUniformLocation("lightDirection");
     lightingShaderUniforms.lightColor     = lightingShader->getUniformLocation("lightColor");
     lightingShaderUniforms.materialColor  = lightingShader->getUniformLocation("materialColor");
+    lightingShaderUniforms.specularAlpha  = lightingShader->getUniformLocation("specularAlpha");
+    lightingShaderUniforms.viewDirection  = lightingShader->getUniformLocation("viewDirection");
     lightingShaderAttributes.vNormal      = lightingShader->getAttributeLocation("vNormal");
     lightingShaderAttributes.vPos         = lightingShader->getAttributeLocation("vPos");
 }
@@ -1276,7 +1211,7 @@ void setupScene() {
 
     glUniform3fv(lightingShaderUniforms.lightDirection, 1, &lightDirection[0]);
     glUniform3fv(lightingShaderUniforms.lightColor, 1, &lightColor[0]);
-
+    glUniform3fv(lightingShaderUniforms.viewDirection, 1, &camPos[0]);
 
 }
 
@@ -1389,7 +1324,7 @@ int main() {
             }
 
         }
-
+        glUniform3fv(lightingShaderUniforms.viewDirection, 1, &camPos[0]);
         renderScene( viewMtx, projMtx );					// draw everything to the window
 
         glfwSwapBuffers(window);                            // flush the OpenGL commands and make sure they get rendered!
