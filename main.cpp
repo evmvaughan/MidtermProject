@@ -34,11 +34,11 @@ glm::vec2 mousePosition;				// last known X and Y of the mouse
 int carnumber=4;
 GLboolean keys[256] = {0};              // keep track of our key states
 
-GLfloat propAngle;                      // angle of rotation for our plane propeller
 
 struct BuildingData {                   // stores the information unique to a single building
     glm::mat4 modelMatrix;                  // the translation/scale of each building
-    glm::vec3 color;                        // the color of each building
+    glm::vec3 color;
+    GLfloat specular;
 };
 std::vector<BuildingData> buildings;    // information for all of our buildings
 
@@ -80,33 +80,17 @@ std::vector<TreeLeavesData> treeLeafLayer3;
 
 
 // Camera definitions
-
-bool firstPerson = false;
-bool arcBall = false;
 bool freeCam= true;
 
 // Defines which character we are controlling
 int charor= 0;
 
-GLdouble cameraTheta, cameraPhi;            // camera DIRECTION in spherical coordinates
 
 glm::vec3 camPos;            			// camera position in cartesian coordinates
 glm::vec3 camAngles;               		// camera DIRECTION in spherical coordinates stored as (theta, phi, radius)
 glm::vec3 camDir; 			            // camera DIRECTION in cartesian coordinates
 glm::vec2 cameraSpeed;                  // cameraSpeed --> x = forward/backward delta, y = rotational delta
 
-int cameraTypeRotation = 0;
-
-// Hero definitions
-
-enum heros {
-    NotEvanVaughan,
-    TriangleMan,
-    DokutahReed,
-    LastMan
-} selectedHero;
-
-// Not Evan Vaughan
 
 float NotEvanVaughanXLocation = 0;
 float NotEvanVaughanYLocation = 0;
@@ -246,6 +230,10 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
                 break;
             case GLFW_KEY_Z:
                 view+=1;
+
+                camAngles = glm::vec3( -float(M_PI/2), 1.5f, 1.0f);
+                updateCameraDirection();
+
                 break;
             case GLFW_KEY_P:
                 charor+=1;
@@ -255,33 +243,6 @@ static void keyboard_callback( GLFWwindow *window, int key, int scancode, int ac
             case GLFW_KEY_Q:
                 glfwSetWindowShouldClose(window, GLFW_TRUE);
                 break;
-            case GLFW_KEY_C:
-
-                if (cameraTypeRotation > 2) {
-                    cameraTypeRotation = 0;
-                }
-
-                if (cameraTypeRotation == 0) {
-                    freeCam = true;
-                    firstPerson = false;
-                    arcBall = false;
-
-                } else if (cameraTypeRotation == 1) {
-                    arcBall = true;
-                    firstPerson = false;
-                    freeCam = false;
-
-                } else if (cameraTypeRotation == 2) {
-                    firstPerson = true;
-                    freeCam = false;
-                    arcBall = false;
-
-                }
-                camAngles.x = -M_PI / 3.0f;
-                camAngles.y = M_PI / 2.8f;
-                updateCameraDirection();
-
-                cameraTypeRotation++;
 
             default:
                 break;
@@ -726,6 +687,13 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
     //// BEGIN DRAWING THE BUILDINGS ////
     for (int i = 0; i < treeTrunks.size(); i++) {
 
+        BuildingData currentBuilding = buildings.at(i);
+
+        computeAndSendMatrixUniforms(currentBuilding.modelMatrix, viewMtx, projMtx);
+        glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentBuilding.color[0]);
+        glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentBuilding.specular);
+        CSCI441::drawSolidCube(1.0);
+
         TreeTrunkData currentTrunk = treeTrunks.at(i);
         TreeLeavesData currentLeafLayer1 = treeLeafLayer1.at(i);
         TreeLeavesData currentLeafLayer2 = treeLeafLayer2.at(i);
@@ -750,36 +718,9 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
         glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer3.color[0]);
         glUniform1fv(lightingShaderUniforms.materialColor, 1, &currentLeafLayer3.specular);
         CSCI441::drawSolidCube(1.0);
-
-//        CSCI441::SimpleShader3::pushTransformation(currentTrunk.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentTrunk.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer1.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer1.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer2.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer2.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
-//
-//        CSCI441::SimpleShader3::pushTransformation(currentLeafLayer3.modelMatrix);
-//        CSCI441::SimpleShader3::setMaterialColor(currentLeafLayer3.color);
-//        CSCI441::drawSolidCube(1.0);
-//        CSCI441::SimpleShader3::popTransformation();
     }
 
 
-//    for( const BuildingData& currentBuilding : buildings ) {
-//        computeAndSendMatrixUniforms(currentBuilding.modelMatrix, viewMtx, projMtx);
-//
-//        glUniform3fv(lightingShaderUniforms.materialColor, 1, &currentBuilding.color[0]);
-//
-//        CSCI441::drawSolidCube(1.0);
-//    }
     //// END DRAWING THE BUILDINGS ////
 
     //// BEGIN DRAWING THE HERO ////
@@ -790,15 +731,6 @@ void renderScene( glm::mat4 viewMtx, glm::mat4 projMtx )  {
     drawDokutahReed(modelMtx, viewMtx, projMtx);
     drawlman(modelMtx, viewMtx, projMtx);
 
-    // we are going to cheat and use our look at point to place our plane so it is always in view
-//    modelMtx = glm::translate( modelMtx, camPos+camDir );
-//    // rotate the plane with our camera theta direction (we need to rotate the opposite direction so we always look at the back)
-//    modelMtx = glm::rotate( modelMtx, -camAngles.x, CSCI441::Y_AXIS );
-//    // rotate the plane with our camera phi direction
-//    modelMtx = glm::rotate( modelMtx,  camAngles.y, CSCI441::X_AXIS );
-    // draw our plane now
-//    drawPlane( modelMtx, viewMtx, projMtx );
-    //// END DRAWING THE PLANE ////
 }
 
 // updateScene() ////////////////////////////////////////////////////////////////
@@ -822,7 +754,7 @@ void updateScene() {
             cRot -= 0.05f;
         if (charor%carnumber==3)
             lRot -= 0.05f;
-        if (firstPerson) {
+        if (view%3==2) {
             camAngles.x  += 0.05f;
             updateCameraDirection();
         }
@@ -837,7 +769,7 @@ void updateScene() {
             cRot += 0.05f;
         if (charor%carnumber==3)
             lRot += 0.05f;
-        if (firstPerson) {
+        if (view%3==2) {
             camAngles.x -= 0.05f;
             updateCameraDirection();
         }
@@ -877,9 +809,7 @@ void updateScene() {
                 && lXLocation + sin(lRot) < 50)
                     lXLocation += sin(lRot) * 0.5;
         }
-        //triRot
-        //trimanXLocation
-        //trimanYLocation
+
     }
     // pitch down
     if( keys[GLFW_KEY_S] ) {
@@ -897,7 +827,6 @@ void updateScene() {
             }
         }
         if (charor%carnumber==1) {
-            //printf("gow");
             rotateWheelSpeed += 0.5f;
             if (trimanYLocation > -50 || trimanYLocation - cos(triRot) > -50) {
                 trimanYLocation -= cos(triRot)  * 0.5;
@@ -936,17 +865,10 @@ void updateScene() {
     if( keys[GLFW_KEY_SPACE] && freeCam) {
         camPos += camDir * cameraSpeed.x;
 
-        // rotate the propeller to make the plane fly!
-        propAngle += M_PI/16.0f;
-        if( propAngle > 2*M_PI ) propAngle -= 2*M_PI;
     }
     // go backward
     if( keys[GLFW_KEY_X] && freeCam ) {
         camPos -= camDir * cameraSpeed.x;
-
-        // rotate the propeller to make the plane fly!
-        propAngle -= M_PI/16.0f;
-        if( propAngle < 0 ) propAngle += 2*M_PI;
     }
 }
 
@@ -966,39 +888,21 @@ void generateEnvironmentDL() {
     const GLint GRID_START = - GRID_WIDTH/2;
     const GLint GRID_END = GRID_WIDTH/2;
 
-    //everything's on a grid.
-//    for( int i = 0; i < GRID_WIDTH - 1; i++) {
-//        for( int j = 0; j < GRID_LENGTH - 1; j++) {
-//            //don't just draw a building ANYWHERE.
-//            if( i % 2 && j % 2 && getRand() < 0.4f ) {
-//                // translate to spot
-//                // compute random height
-//                GLdouble height = powf(getRand(), 2.5)*10 + 1;  //center buildings are bigger!
-//                // translate up to grid plus make them float slightly to avoid depth fighting/aliasing
-//                modelMtx = glm::translate( modelMtx, glm::vec3(0, height/2.0f + 0.1, 0) );
-//                // scale to building size
-//                modelMtx = glm::scale( modelMtx, glm::vec3(1, height, 1) );
-//
-//                // compute random color
-//                glm::vec3 color( getRand(), getRand(), getRand() );
-//
-//                // store building properties
-//                BuildingData currentBuilding;
-//                currentBuilding.modelMatrix = modelMtx;
-//                currentBuilding.color = color;
-//                buildings.emplace_back( currentBuilding );
-//            }
-//        }
-//    }
-
-//    glm::mat4 modelMtx = glm::translate( glm::mat4(1.0), glm::vec3(((GLfloat) - GRID_WIDTH / 2.0f) * GRID_SPACING, 0.0f, ((GLfloat) - GRID_LENGTH / 2.0f) * GRID_SPACING) );
-
-// just check
     for (int row = GRID_START; row < GRID_END; row++) {
         for (int column = GRID_START; column < GRID_END; column++) {
-            if (row % 2 == 0 && column % 2 == 0 && getRand() < 0.05) {
+            if (row % 2 == 0 && column % 2 == 0 && getRand() < 0.02) {
 
                 float treeHeight = getRand() * 20;
+
+                float buildingHeight = getRand() * 20;
+
+                glm::mat4 buildingScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f, buildingHeight, 2.0f));
+                glm::mat4 buildingTranslationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(row + getRand() * 10, 0.0f, column + getRand() * 10));
+                glm::mat4 buildingHeightTranslationMatrix = glm::translate(glm::mat4(1.0f),
+                                                                        glm::vec3(0.0f, buildingHeight / 2, 0.0f));
+
+                BuildingData building = {buildingHeightTranslationMatrix * buildingTranslationMatrix * buildingScaleMatrix,
+                                           glm::vec3(0.4, 0.4, 0.5)};
 
                 glm::mat4 trunkScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, treeHeight / 8, 1.0f));
                 glm::mat4 trunkTranslationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(row, 0.0f, column));
@@ -1031,6 +935,8 @@ void generateEnvironmentDL() {
 
                 TreeLeavesData treeLeaf3 = {leaf3HeightTranslationMatrix * leaf3TranslationMatrix * leaf3ScaleMatrix,
                                             glm::vec3(0, 1, 0)};
+
+                buildings.push_back(building);
 
                 treeTrunks.push_back(treeTrunk);
                 treeLeafLayer1.push_back(treeLeaf1);
@@ -1131,7 +1037,7 @@ void setupGLEW() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void setupShaders() {
-    lightingShader = new CSCI441::ShaderProgram( "shaders/lab05.v.glsl", "shaders/lab05.f.glsl" );
+    lightingShader = new CSCI441::ShaderProgram( "shaders/midtermShader.v.glsl", "shaders/midtermShader.f.glsl" );
     lightingShaderUniforms.mvpMatrix      = lightingShader->getUniformLocation("mvpMatrix");
     lightingShaderUniforms.modelMtx       = lightingShader->getUniformLocation("modelMtx");
     lightingShaderUniforms.mNormal        = lightingShader->getUniformLocation("mNormal");
@@ -1198,8 +1104,6 @@ void setupScene() {
     cameraSpeed = glm::vec2(0.25f, 0.02f);
     updateCameraDirection();
 
-    propAngle = 0.0f;
-
     srand( time(nullptr) );                 // seed our random number generator
     generateEnvironmentDL();                // create our environment display list
 
@@ -1233,10 +1137,6 @@ int main() {
     setupShaders();                                         // load our shader program into memory
     setupBuffers();
     setupScene();
-
-    selectedHero = NotEvanVaughan;
-
-
 
     // needed to connect our 3D Object Library to our shader
     CSCI441::setVertexAttributeLocations( lightingShaderAttributes.vPos, lightingShaderAttributes.vNormal );
