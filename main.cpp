@@ -50,6 +50,9 @@ struct LightingShaderUniforms {         // stores the locations of all of our sh
     GLint mNormal;
     GLint lightDirection;
     GLint lightColor;
+    GLint lightPosition;
+    GLint lightPositionSpot;
+    GLint lightPositionDirection;
     GLint modelMtx;
     GLint mvpMatrix;
     GLint materialColor;
@@ -1048,7 +1051,7 @@ GLFWwindow* setupGLFW() {
     glfwWindowHint( GLFW_DOUBLEBUFFER, GLFW_TRUE );                         // request double buffering
 
     // create a window for a given size, with a given title
-    GLFWwindow *window = glfwCreateWindow( WINDOW_WIDTH, WINDOW_HEIGHT, "Lab05 - Flight Simulator v0.41 alpha", nullptr, nullptr );
+    GLFWwindow *window = glfwCreateWindow( WINDOW_WIDTH, WINDOW_HEIGHT, "Midterm Project - Our heros", nullptr, nullptr );
     if( !window ) {						// if the window could not be created, NULL is returned
         fprintf( stderr, "[ERROR]: GLFW Window could not be created\n" );
         glfwTerminate();
@@ -1118,6 +1121,14 @@ void setupShaders() {
     lightingShaderUniforms.materialColor  = lightingShader->getUniformLocation("materialColor");
     lightingShaderUniforms.specularAlpha  = lightingShader->getUniformLocation("specularAlpha");
     lightingShaderUniforms.viewDirection  = lightingShader->getUniformLocation("viewDirection");
+
+    // point light
+    lightingShaderUniforms.lightPosition  = lightingShader->getUniformLocation("lightPosition");
+
+    // spot light
+    lightingShaderUniforms.lightPositionSpot  = lightingShader->getUniformLocation("lightPositionSpot");
+    lightingShaderUniforms.lightPositionDirection  = lightingShader->getUniformLocation("lightPositionDirection");
+
     lightingShaderAttributes.vNormal      = lightingShader->getAttributeLocation("vNormal");
     lightingShaderAttributes.vPos         = lightingShader->getAttributeLocation("vPos");
 }
@@ -1183,12 +1194,18 @@ void setupScene() {
     // assign uniforms, they get sent to this shader
 
     glm::vec3 lightDirection = glm::vec3(-1.0,-1.0,-1.0);
-    glm::vec3 lightColor = glm::vec3(1,1,1);
+    glm::vec3 lightColor = glm::vec3(1.0,1.0,1.0);
+    glm::vec3 lightPosition = glm::vec3 (10, 50, 10);
+
+    glm::vec3 lightPositionSpot = glm::vec3(20, 20, 20);
+    glm::vec3 lightPositionDirection = glm::vec3(0, -1, 0);
 
     glUniform3fv(lightingShaderUniforms.lightDirection, 1, &lightDirection[0]);
     glUniform3fv(lightingShaderUniforms.lightColor, 1, &lightColor[0]);
+    glUniform3fv(lightingShaderUniforms.lightPosition, 1, &lightPosition[0]);
+    glUniform3fv(lightingShaderUniforms.lightPositionSpot, 1, &lightPositionSpot[0]);
+    glUniform3fv(lightingShaderUniforms.lightPositionDirection, 1, &lightPositionDirection[0]);
     glUniform3fv(lightingShaderUniforms.viewDirection, 1, &camPos[0]);
-
 }
 
 ///*************************************************************************************

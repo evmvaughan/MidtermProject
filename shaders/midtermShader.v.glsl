@@ -10,6 +10,12 @@ uniform mat3 mNormal;
 uniform vec3 lightDirection;
 // the color of the light
 uniform vec3 lightColor;
+// point light
+uniform vec3 lightPosition;
+// spot light
+uniform vec3 lightPositionSpot;
+uniform vec3 lightPositionDirection;
+
 // specular alpha component
 uniform float specularAlpha;
 // the direction of the view, for specular
@@ -28,15 +34,26 @@ void main() {
     // transform & output the vertex in clip space
     gl_Position = mvpMatrix * vec4(vPos, 1.0);
 
+
     vec4 vWPos4 = modelMtx * vec4(vPos, 1.0);
     vec3 vWorldPos = vec3(vWPos4.x, vWPos4.y, vWPos4.z);
 
     vec3 normalLightDirection = normalize(-lightDirection);
     vec3 normalViewDirection = normalize(viewDirection-vWorldPos);
 
-    vec3 worldSpaceNormal = mNormal * vNormal;
+    const float intensity = 0.1;
+    vec3 worldSpaceNormal = mNormal * vNormal * intensity;
     // diffuse component
     vec3 diffuseComponent = lightColor * materialColor * max(dot(normalLightDirection, worldSpaceNormal),0.0);
+    diffuseComponent = diffuseComponent + lightColor * materialColor * max(dot(vPos-lightPosition, worldSpaceNormal),0.0);
+
+
+    vec3 ld = normalize(lightPositionSpot - vPos);
+    vec3 lp = normalize(lightPositionDirection);
+    if (dot(ld, lp) < 0.5) {
+        diffuseComponent = diffuseComponent + lightColor * materialColor * max(dot(vPos-lightPositionSpot, worldSpaceNormal),0.0);
+    }
+
     // specular component
     vec3 specH = normalize(normalLightDirection+normalViewDirection);
     float specAngle = max(dot(specH, worldSpaceNormal), 0.0);
